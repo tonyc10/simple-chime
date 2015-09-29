@@ -1,0 +1,48 @@
+<resources>
+
+    <string name="pref_on_off">PREF_ON_OFF</string>
+    <string name="pref_hours">PREF_HOURS</string>
+    <string name="pref_volume">PREF_VOLUME</string>
+    <string name="pref_source">PREF_SOURCE</string>
+    <string name="pref_sound">PREF_SOUND</string>
+    <string name="pref_ringtone">PREF_NOTIFICATION</string>
+    <string name="alarm_action">com.tonycase.chimealarm.CHIME_ALARM_ACTION</string>
+
+    <string name="app_name">Simple Chime</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="general_settings">General Settings</string>
+    <string name="sound_settings">Sound Settings</string>
+
+    <string name="content_desc_bell">large image of clock icon</string>
+
+    <string name="limit_to_range">Limit to Range:</string>
+
+    <string name="oh_hundred_am_to">:00 AM to</string>
+    <string name="oh_hundred_pm">:00 PM</string>
+    <string name="hour_and_minute_date_format">hh:mm a</string>
+
+    <string name="activation">Activation</string>
+    <string name="time_summary_default">Every Hour All Day</string>
+    <string name="times_title">Chime Times</string>
+    <string name="volume_summary_default">Volume setting: 8</string>
+    <string name="volume">Volume</string>
+    <string name="source_summary_app">Choose chime sound from app</string>
+    <string name="source_summary_phone">Choose phone notification sound</string>
+    <string name="app">App</string>
+    <string name="phone">Phone</string>
+    <string name="source_title">Sound Source: App or Phone</string>
+    <string name="sound_dialog_title">Chime Sound</string>
+    <string name="sound_summary_default">Selected sound: Clong</string>
+    <string name="sound_title">Chime Sound</string>
+    <string name="ringtone_title">Notification Sound</string>
+    <string name="ringtone_summary_default">Selected sound: default</string>
+    <string name="sound_summary_base">"Selected sound:  "</string>
+    <string name="chime_is_on">Chime is on</string>
+    <string name="chime_is_off">Chime is off</string>
+    <string name="chime_always_on">Chime Always On</string>
+    <string name="on_off_switch">On/off switch</string>
+    <string name="off_capitalized">OFF</string>
+    <string name="on_capitalized">ON</string>
+
+</resources>

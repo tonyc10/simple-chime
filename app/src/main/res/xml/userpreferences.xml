@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="preference_screen">
+
+    <PreferenceCategory android:title="@string/general_settings">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/pref_on_off"
+            android:summary="@string/on_off_switch"
+            android:switchTextOff="@string/off_capitalized"
+            android:switchTextOn="@string/on_capitalized"
+            android:title="@string/activation" />
+
+        <com.tonycase.simplechime.HoursSelectDialog
+            android:key="@string/pref_hours"
+            android:summary="@string/time_summary_default"
+            android:title="@string/times_title" />
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/sound_settings">
+        <com.tonycase.simplechime.VolumeSelectDialog
+            android:defaultValue="8"
+            android:key="@string/pref_volume"
+            android:summary="@string/volume_summary_default"
+            android:title="@string/volume" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/pref_source"
+            android:summary="@string/source_summary_app"
+            android:switchTextOff="@string/app"
+            android:switchTextOn="@string/phone"
+            android:title="@string/source_title" />
+
+        <ListPreference
+            android:defaultValue="clong1"
+            android:dialogTitle="@string/sound_dialog_title"
+            android:entries="@array/bell_options"
+            android:entryValues="@array/bell_values"
+            android:key="@string/pref_sound"
+            android:summary="@string/sound_summary_default"
+            android:title="@string/sound_title" />
+
+        <RingtonePreference
+            android:key="@string/pref_ringtone"
+            android:ringtoneType="notification"
+            android:showDefault="true"
+            android:title="@string/ringtone_title"
+            android:summary="@string/ringtone_summary_default"
+            />
+    </PreferenceCategory>
+</PreferenceScreen>

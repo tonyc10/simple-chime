@@ -1,0 +1,6 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+    <header android:fragment="com.tonycase.simplechime.ChimePreferenceFragment"
+            android:icon="@drawable/ic_launcher"
+            android:title="Chimer Preferences"
+            android:summary="Manage all Chimer settings" />
+</preference-headers>
