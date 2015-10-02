@@ -2,6 +2,7 @@
 
     <string name="pref_on_off">PREF_ON_OFF</string>
     <string name="pref_hours">PREF_HOURS</string>
+    <string name="pref_increment">PREF_INCREMENT</string>
     <string name="pref_volume">PREF_VOLUME</string>
     <string name="pref_source">PREF_SOURCE</string>
     <string name="pref_sound">PREF_SOUND</string>
@@ -18,12 +19,13 @@
 
     <string name="limit_to_range">Limit to Range:</string>
 
-    <string name="oh_hundred_am_to">:00 AM to</string>
+    <string name="to">to</string>
     <string name="oh_hundred_pm">:00 PM</string>
     <string name="hour_and_minute_date_format">hh:mm a</string>
 
     <string name="activation">Activation</string>
-    <string name="time_summary_default">Every Hour All Day</string>
+    <string name="time_summary_default">Every hour all day</string>
+    <string name="increment_summary_default">On the hour</string>
     <string name="times_title">Chime Times</string>
     <string name="volume_summary_default">Volume setting: 8</string>
     <string name="volume">Volume</string>
@@ -33,6 +35,7 @@
     <string name="phone">Phone</string>
     <string name="source_title">Sound Source: App or Phone</string>
     <string name="sound_dialog_title">Chime Sound</string>
+    <string name="increment_dialog_title">Chime Increment</string>
     <string name="sound_summary_default">Selected sound: Clong</string>
     <string name="sound_title">Chime Sound</string>
     <string name="ringtone_title">Notification Sound</string>
@@ -44,5 +47,6 @@
     <string name="on_off_switch">On/off switch</string>
     <string name="off_capitalized">OFF</string>
     <string name="on_capitalized">ON</string>
+    <string name="every_hour_from">"Every hour from "</string>
 
 </resources>

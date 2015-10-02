@@ -59,27 +59,30 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
 
     private HourState determineHourState(Context context, Calendar cal) {
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String timesStr = prefs.getString(context.getString(R.string.pref_hours), null);
+        TimeRange timeRange = ChimeUtilities.getTimeRange(context);
 
-        if (timesStr != null) {
-            try {
-                String[] hoursArray = timesStr.split(" ");
-                int start = Integer.parseInt(hoursArray[0]);
-                int end = Integer.parseInt(hoursArray[1]);
+        if (timeRange != null) {
+                int start = timeRange.getStart();
+                int end = timeRange.getEnd();
+
                 int hour = cal.get(Calendar.HOUR_OF_DAY);
                 Log.d(TAG, "Hour of day, start and end are: " + hour + ", " + start + ", " + end);
 
-                if (hour < start || hour > end+12)
-                    return HourState.INVALID;
+                if (timeRange.isInverseMode()) {
+                    if (hour < start && hour > end)
+                        return HourState.INVALID;
 
-                if (hour == end+12) {
-                    return HourState.RESET_FOR_TOMORROW;
+                    if (hour == end) {
+                        return HourState.RESET_FOR_TOMORROW;
+                    }
+                } else {
+                    if (hour < start || hour > end)
+                        return HourState.INVALID;
+
+                    if (hour == end) {
+                        return HourState.RESET_FOR_TOMORROW;
+                    }
                 }
-
-            } catch (Exception ex) {
-                Log.w(TAG, "Unable to parse time string", ex);
-            }
         }
         return HourState.NORMAL;
     }

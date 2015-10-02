@@ -96,6 +96,8 @@ public class ChimePreferenceFragment extends PreferenceFragment
 
         if (key.equals(getString(R.string.pref_source))) {
             setSource(sharedPreferences);
+        } else if (key.equals(R.string.pref_increment)) {
+
         } else if (key.equals(getString(R.string.pref_sound))) {
 
             if (getActivity() == null) {
@@ -106,7 +108,7 @@ public class ChimePreferenceFragment extends PreferenceFragment
             ((MainActivity) getActivity()).playSoundShakeBell();
             setSoundSummary(sharedPreferences);
 
-        } else if (key.equals(getString(R.string.pref_sound))) {
+        } else if (key.equals(getString(R.string.pref_ringtone))) {
 
             if (getActivity() == null) {
                 Log.i(TAG, "fragment not attached to activity.  returning");

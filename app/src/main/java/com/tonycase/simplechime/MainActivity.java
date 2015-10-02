@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
             Fragment frag0 = MainActivity.this.getFragmentManager().findFragmentByTag(FRAG_TAG);
             //System.out.println("Existing frag = " + frag0);
             // Display the fragment as the main content.
-            if (frag0 == null) {
+            if (frag0 == null && !isFinishing()) {
                 Log.i(TAG, "Replacing screen with new fragment");
                 MainActivity.this.getFragmentManager().beginTransaction()
                         .replace(android.R.id.content, prefFrag, FRAG_TAG)

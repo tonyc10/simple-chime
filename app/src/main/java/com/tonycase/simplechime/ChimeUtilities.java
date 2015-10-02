@@ -10,6 +10,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
@@ -18,12 +19,32 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ChimeUtilities {
 
+    private static final String TAG = "ChimeUtilities";
 
     public static void playSound(Context context) {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        int volume = prefs.getInt("PREF_VOLUME", 5);
+        int volume = prefs.getInt(context.getString(R.string.pref_volume), 5);
         playSound(context, volume);
+    }
+
+    public static TimeRange getTimeRange(Context context) {
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String timesStr = prefs.getString(context.getString(R.string.pref_hours), null);
+
+        if (timesStr != null) {
+            try {
+                String[] hoursArray = timesStr.split(" ");
+                int start = Integer.parseInt(hoursArray[0]);
+                int end = Integer.parseInt(hoursArray[1]);
+
+                return new TimeRange(start, end);
+            } catch (Exception ex) {
+                Log.w(TAG, "Unable to parse time string", ex);
+            }
+        }
+        return new TimeRange(0, 23);   // all hours
     }
 
     public static void playSound(Context context, int volume) {
@@ -35,10 +56,11 @@ public final class ChimeUtilities {
         String uriStr = null;
         boolean sourcePhone = prefs.getBoolean(context.getString(R.string.pref_source), false);
         if (sourcePhone) {
-            uriStr = prefs.getString("PREF_NOTIFICATION", null);
+            uriStr = prefs.getString(context.getString(R.string.pref_ringtone), null);
         }
         if (uriStr == null) {
-            String uriPref = prefs.getString("PREF_SOUND", String.valueOf(R.raw.clong1));
+            String uriPref = prefs.getString(context.getString(R.string.pref_sound),
+                    String.valueOf(R.raw.clong1));
             int resID = context.getResources().getIdentifier(uriPref , "raw", context.getPackageName());
             uriStr = Uri.parse("android.resource://com.tonycase.simplechime/" + resID).toString();
         }
@@ -55,27 +77,17 @@ public final class ChimeUtilities {
 
     public static void startAlarm(Context act) {
 
+        Log.i(TAG, "Setting alarm, current time is " + new Date());
+
         AlarmManager amgr = (AlarmManager) act.getSystemService(Context.ALARM_SERVICE);
         int alarmType = AlarmManager.RTC_WAKEUP;
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(act);
-        String timesStr = prefs.getString("PREF_HOURS", null);
+        TimeRange timeRange = getTimeRange(act);
+        Log.i(TAG, "Current time range is " + timeRange);
+
 
         Calendar cal = new GregorianCalendar();
         int hour = cal.get(Calendar.HOUR_OF_DAY);
-
-        int start = 0;
-        int end = 23;
-
-        if (timesStr != null) {
-            try {
-                String[] hoursArray = timesStr.split(" ");
-                start = Integer.parseInt(hoursArray[0]);
-                end = Integer.parseInt(hoursArray[1]);
-            } catch (Exception ex) {
-                Log.w("Chime startAlarm()", "Unable to parse time string", ex);
-            }
-        }
 
         String CHIME_ALARM_ACTION = act.getString(R.string.alarm_action); // "com.tonycase.chimealarm.CHIME_ALARM_ACTION"
         Intent intentToFire = new Intent(CHIME_ALARM_ACTION);
@@ -88,17 +100,37 @@ public final class ChimeUtilities {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MINUTE, 0);
 
-        if (hour < start) {
-            // set alarm for start hour
-            cal.set(Calendar.HOUR_OF_DAY, start);
-        }
-        else if (hour >= end+12) {
-            // set alarm for start hour tomorrow
-            cal.set(Calendar.HOUR_OF_DAY, start);
-            cal.setTimeInMillis(cal.getTimeInMillis() + TimeUnit.DAYS.toMillis(1));
+        int start = timeRange.getStart();
+        int end = timeRange.getEnd();
+
+        if (timeRange.isInverseMode()) {
+            // In inverse mode, end is start and start is end, so..
+            // we're chiming if hour is less than or equal to start, or greater than or equal to end
+            if (hour <= end || hour >= start) {
+                // handle special case, end of day
+                if (hour == 23) {
+                    cal.set(Calendar.HOUR_OF_DAY, 0);
+                    cal.setTimeInMillis(cal.getTimeInMillis() + TimeUnit.DAYS.toMillis(1));
+                } else {
+                    // set alarm to start next hour
+                    cal.set(Calendar.HOUR_OF_DAY, hour + 1);
+                }
+            } else {
+                // jump ahead to end (which in inverse, is start time)
+                cal.set(Calendar.HOUR_OF_DAY, end);
+            }
         } else {
-            // set alarm to start next hour
-            cal.set(Calendar.HOUR_OF_DAY, hour+1);
+            if (hour < start) {
+                // set alarm for start hour
+                cal.set(Calendar.HOUR_OF_DAY, start);
+            } else if (hour >= end) {
+                // set alarm for start hour tomorrow
+                cal.set(Calendar.HOUR_OF_DAY, start);
+                cal.setTimeInMillis(cal.getTimeInMillis() + TimeUnit.DAYS.toMillis(1));
+            } else {
+                // set alarm to start next hour
+                cal.set(Calendar.HOUR_OF_DAY, hour + 1);
+            }
         }
 
         Log.i("Chime Main", "Next alarm will go off at " + cal.getTime());

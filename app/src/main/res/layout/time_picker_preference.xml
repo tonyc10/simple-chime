@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:padding="12dp"
     tools:ignore="RtlHardcoded">
 
     <RadioButton
@@ -33,41 +34,42 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:padding="6dp"
+        android:layout_gravity="center"
         android:gravity="center"
         >
 
-        <EditText
+        <Spinner
             android:id="@+id/editText1"
-            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ems="2"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:inputType="number" >
-        </EditText>
+            android:spinnerMode="dropdown"
+            android:gravity="right"
+            android:dropDownWidth="wrap_content"
+            android:textSize="30sp"
+            android:entries="@array/hours">
+        </Spinner>
 
         <TextView
             style="@android:style/Theme.Black"
             android:id="@+id/tpp_textView1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/oh_hundred_am_to"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-        <EditText
+            android:text="@string/to"
+            android:layout_margin="15dp"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+        <Spinner
             android:id="@+id/editText2"
-            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ems="2"
-            android:inputType="number"
-            android:textAppearance="?android:attr/textAppearanceLarge">
-        </EditText>
-
-        <TextView
-            android:id="@+id/tpp_textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/oh_hundred_pm"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:gravity="left"
+            android:spinnerMode="dropdown"
+            android:dropDownWidth="wrap_content"
+            android:textSize="30sp"
+            android:entries="@array/hours">
+        </Spinner>
 
     </LinearLayout>
 
