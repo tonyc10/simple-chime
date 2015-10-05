@@ -5,6 +5,8 @@ package com.tonycase.simplechime;
  */
 public class TimeRange {
 
+    public final static TimeRange ALL_DAY = new TimeRange(0, 23);
+
     private final int start;
     private final int end;
 
@@ -33,7 +35,8 @@ public class TimeRange {
     }
 
     public boolean isAllDay() {
-        return start == 0 && end == 23;
+        return this == ALL_DAY
+                || (start == 0 && end == 23);
     }
 
     @Override

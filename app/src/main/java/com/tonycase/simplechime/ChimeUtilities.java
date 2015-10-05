@@ -21,13 +21,6 @@ public final class ChimeUtilities {
 
     private static final String TAG = "ChimeUtilities";
 
-    public static void playSound(Context context) {
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        int volume = prefs.getInt(context.getString(R.string.pref_volume), 5);
-        playSound(context, volume);
-    }
-
     public static TimeRange getTimeRange(Context context) {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -44,7 +37,14 @@ public final class ChimeUtilities {
                 Log.w(TAG, "Unable to parse time string", ex);
             }
         }
-        return new TimeRange(0, 23);   // all hours
+        return TimeRange.ALL_DAY;   // all hours
+    }
+
+    public static void playSound(Context context) {
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        int volume = prefs.getInt(context.getString(R.string.pref_volume), 5);
+        playSound(context, volume);
     }
 
     public static void playSound(Context context, int volume) {
@@ -77,14 +77,13 @@ public final class ChimeUtilities {
 
     public static void startAlarm(Context act) {
 
-        Log.i(TAG, "Setting alarm, current time is " + new Date());
+        Log.d(TAG, "Setting alarm, current time is " + new Date());
 
         AlarmManager amgr = (AlarmManager) act.getSystemService(Context.ALARM_SERVICE);
         int alarmType = AlarmManager.RTC_WAKEUP;
 
         TimeRange timeRange = getTimeRange(act);
-        Log.i(TAG, "Current time range is " + timeRange);
-
+        Log.v(TAG, "Current time range is " + timeRange);
 
         Calendar cal = new GregorianCalendar();
         int hour = cal.get(Calendar.HOUR_OF_DAY);
@@ -133,7 +132,7 @@ public final class ChimeUtilities {
             }
         }
 
-        Log.i("Chime Main", "Next alarm will go off at " + cal.getTime());
+        Log.d("Chime Main", "Next alarm will go off at " + cal.getTime());
         long toStartHour = cal.getTimeInMillis(); // Api-9:
         long oneHourTimeStep = TimeUnit.HOURS.toMillis(1);
         amgr.setRepeating(alarmType, toStartHour, oneHourTimeStep, pIntent);

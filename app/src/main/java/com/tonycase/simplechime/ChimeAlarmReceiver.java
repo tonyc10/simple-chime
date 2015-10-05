@@ -61,28 +61,26 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
 
         TimeRange timeRange = ChimeUtilities.getTimeRange(context);
 
-        if (timeRange != null) {
-                int start = timeRange.getStart();
-                int end = timeRange.getEnd();
+        int start = timeRange.getStart();
+        int end = timeRange.getEnd();
 
-                int hour = cal.get(Calendar.HOUR_OF_DAY);
-                Log.d(TAG, "Hour of day, start and end are: " + hour + ", " + start + ", " + end);
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        Log.d(TAG, "Hour of day, start and end are: " + hour + ", " + start + ", " + end);
 
-                if (timeRange.isInverseMode()) {
-                    if (hour < start && hour > end)
-                        return HourState.INVALID;
+        if (timeRange.isInverseMode()) {
+            if (hour < start && hour > end)
+                return HourState.INVALID;
 
-                    if (hour == end) {
-                        return HourState.RESET_FOR_TOMORROW;
-                    }
-                } else {
-                    if (hour < start || hour > end)
-                        return HourState.INVALID;
+            if (hour == end) {
+                return HourState.RESET_FOR_TOMORROW;
+            }
+        } else {
+            if (hour < start || hour > end)
+                return HourState.INVALID;
 
-                    if (hour == end) {
-                        return HourState.RESET_FOR_TOMORROW;
-                    }
-                }
+            if (hour == end) {
+                return HourState.RESET_FOR_TOMORROW;
+            }
         }
         return HourState.NORMAL;
     }
@@ -90,7 +88,7 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
     private void makeToast(Context context, Calendar cal) {
 
         // hh:mm a
-        DateFormat df = new SimpleDateFormat(context.getString(R.string.hour_and_minute_date_format));
+        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
         String message = df.format(cal.getTime());
         int duration = Toast.LENGTH_LONG;
         Toast toast = Toast.makeText(context, message, duration);
@@ -116,3 +114,20 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
         toast.show();
     }
 }
+
+/*
+  Time Interval:
+  Regular mode:
+    7am - 6pm
+    hour < 7 (invalid)
+    hour = 7 (normal)
+    hour > 7, < 18 (normal)
+    hour = 18 (reset)
+    hour > 18 (invalid)
+
+  Inverse mode:
+     9 am - 1am
+     hour < 9, > 1, (invalid)
+     hour == 1 (reset)
+     else (normal)
+ */

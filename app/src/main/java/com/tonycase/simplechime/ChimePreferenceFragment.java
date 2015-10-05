@@ -13,6 +13,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.ListPreference;
+import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
@@ -45,6 +46,35 @@ public class ChimePreferenceFragment extends PreferenceFragment
         setSoundSummary(prefs);
         setRingtoneSummary(prefs);
         setSource(prefs);
+        setActive(prefs);
+    }
+
+    private void setActive(SharedPreferences sharedPreferences) {
+
+        SwitchPreference sourcePref = (SwitchPreference) findPreference(getString(R.string.pref_source));
+        ListPreference soundPref = (ListPreference) findPreference(getString(R.string.pref_sound));
+        RingtonePreference ringtonePref =
+                (RingtonePreference) findPreference(getString(R.string.pref_ringtone));
+        Preference timePref = findPreference(getString(R.string.pref_hours));
+        Preference volPref = findPreference(getString(R.string.pref_volume));
+
+        boolean isOn = sharedPreferences.getBoolean(getString(R.string.pref_on_off), false);
+
+        if (!isOn) {
+            sourcePref.setEnabled(false);
+            soundPref.setEnabled(false);
+            ringtonePref.setEnabled(false);
+            timePref.setEnabled(false);
+            volPref.setEnabled(false);
+        } else {
+            sourcePref.setEnabled(true);
+            soundPref.setEnabled(true);
+            ringtonePref.setEnabled(true);
+            timePref.setEnabled(true);
+            volPref.setEnabled(true);
+            // one must be off
+            setSource(sharedPreferences);
+        }
     }
 
     private void setSource(SharedPreferences sharedPreferences) {
@@ -117,6 +147,9 @@ public class ChimePreferenceFragment extends PreferenceFragment
             setRingtoneSummary(sharedPreferences);
         } else if (key.equals(getActivity().getString(R.string.pref_on_off))
                    || key.equals(getString(R.string.pref_hours))) {
+
+            setActive(sharedPreferences);
+
             boolean chimeOn = sharedPreferences.getBoolean(
                     getActivity().getString(R.string.pref_on_off), false);
             Activity act = getActivity();
@@ -145,7 +178,6 @@ public class ChimePreferenceFragment extends PreferenceFragment
         }
     }
 }
-
 
 /*
 Set alarm logic:
