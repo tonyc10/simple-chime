@@ -3,6 +3,7 @@ package com.tonycase.simplechime;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.DialogPreference;
+import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -21,8 +22,6 @@ import java.util.GregorianCalendar;
 public class HoursSelectDialog extends DialogPreference {
 	
 	private final String TAG = "Chime HoursSelectDialog";
-
-	public static final String DEFAULT_VALUE = null;
 
 	private RadioButton allDayRB;
 	private RadioButton specifyRB;
@@ -49,18 +48,6 @@ public class HoursSelectDialog extends DialogPreference {
         setNegativeButtonText(android.R.string.cancel);
 
 		setDialogIcon(null);
-		
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext()); 
-		String timesStr = prefs.getString("PREF_HOURS", DEFAULT_VALUE);
-		
-		Log.i(TAG, "Starting up HoursSelectpreference, prev pref is " + timesStr);
-	
-		if (timesStr == null) {
-			setSummary("Every Hour All Day");
-		} else {
-            TimeRange timeRange = ChimeUtilities.getTimeRange(getContext());
-		    setSummary(summaryText(timeRange.getStart(), timeRange.getEnd()));
-		}
 	}
 	
 	/* (non-Javadoc)
@@ -92,9 +79,15 @@ public class HoursSelectDialog extends DialogPreference {
 
 		intermedText = (TextView) view.findViewById(R.id.tpp_textView1);
 
-        TimeRange timeRange = ChimeUtilities.getTimeRange(getContext());
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		boolean allDay = prefs.getBoolean(getContext().getString(R.string.pref_all_day), true);
 
-		if (timeRange.isAllDay()) {
+		TimeRange timeRange = ChimeUtilities.getTimeRange(getContext());
+
+		int start = timeRange.getStart();
+		int end = timeRange.getEnd();
+
+		if (allDay) {
 			allDayRB.setChecked(true);
 			specifyRB.setChecked(false);
 			startHourDropdown.setEnabled(false);
@@ -102,21 +95,18 @@ public class HoursSelectDialog extends DialogPreference {
 			intermedText.setEnabled(false);
 			setSummary("Every Hour All Day");
 		} else {
-			
 			allDayRB.setChecked(false);
 			specifyRB.setChecked(true);
 			startHourDropdown.setEnabled(true);
 			endHourDropdown.setEnabled(true);
 			intermedText.setEnabled(true);
 
-            int start = timeRange.getStart();
-            int end = timeRange.getEnd();
-
-            startHourDropdown.setSelection(start);
-            endHourDropdown.setSelection(end);
-            setSummary(summaryText(start, end));
+			setSummary(summaryText(start, end));
 			startHourDropdown.requestFocus();
 		}
+
+		startHourDropdown.setSelection(start);
+		endHourDropdown.setSelection(end);
 
 		allDayRB.setOnClickListener(new OnClickListener() {
 			@Override
@@ -153,15 +143,6 @@ public class HoursSelectDialog extends DialogPreference {
 
 	
 	/* (non-Javadoc)
-	 * @see android.preference.Preference#onCreateView(android.view.ViewGroup)
-	 */
-	@Override
-	protected View onCreateView(ViewGroup parent) {
-		Log.d(TAG, "onCreateView() ");
-		return super.onCreateView(parent);
-	}
-
-	/* (non-Javadoc)
 	 * @see android.preference.DialogPreference#onDialogClosed(boolean)
 	 */
 	@Override
@@ -170,24 +151,30 @@ public class HoursSelectDialog extends DialogPreference {
 		Log.d(TAG, "onDialogClosed");
 		
 		if (positiveResult) {
+
+			persistAllDay(allDayRB.isChecked());
 			if (allDayRB.isChecked()) {
-				persistString(null);
-				notifyChanged();
 				setSummary("Every Hour All Day");
 			} else {
 				// validate here
-					int start = startHourDropdown.getSelectedItemPosition();
-					int end = endHourDropdown.getSelectedItemPosition();
-                    Log.d(TAG, "Dialog closed, start and end are " + start + ", " + end);
-					if (start < 0 || start > 23 || end < 0 || end > 23)
-						throw new IllegalStateException("Save hours are not legit");
-					String value = start + " " + end;
-					persistString(value);
-					notifyChanged();
-					setSummary(summaryText(start, end));
+				int start = startHourDropdown.getSelectedItemPosition();
+				int end = endHourDropdown.getSelectedItemPosition();
+				Log.d(TAG, "Dialog closed, start and end are " + start + ", " + end);
+				if (start < 0 || start > 23 || end < 0 || end > 23)
+					throw new IllegalStateException("Save hours are not legit");
+				String value = start + " " + end;
+				persistString(value);
+				setSummary(summaryText(start, end));
 			}
+			notifyChanged();
 		}
 		super.onDialogClosed(positiveResult);
+	}
+
+	private void persistAllDay(boolean allDay) {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(getContext().getString(R.string.pref_all_day), allDay).commit();
 	}
 
 	private String summaryText(int start, int end) {

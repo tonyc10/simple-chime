@@ -1,6 +1,7 @@
 <resources>
 
     <string name="pref_on_off">PREF_ON_OFF</string>
+    <string name="pref_all_day">PREF_ALL_DAY</string>
     <string name="pref_hours">PREF_HOURS</string>
     <string name="pref_increment">PREF_INCREMENT</string>
     <string name="pref_volume">PREF_VOLUME</string>

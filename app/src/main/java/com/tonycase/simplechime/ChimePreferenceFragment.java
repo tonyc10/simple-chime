@@ -14,12 +14,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.preference.SwitchPreference;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 @SuppressLint("NewApi")
@@ -162,10 +164,10 @@ public class ChimePreferenceFragment extends PreferenceFragment
 
                 ChimeUtilities.startAlarm(getActivity());
 
-                Toast toast = Toast.makeText(getActivity(), R.string.chime_is_on, Toast.LENGTH_LONG);
+                Toast toast = Toast.makeText(getActivity(), R.string.chime_is_on, Toast.LENGTH_SHORT);
                 toast.show();
             } else {
-                Toast toast = Toast.makeText(getActivity(), R.string.chime_is_off, Toast.LENGTH_LONG);
+                Toast toast = Toast.makeText(getActivity(), R.string.chime_is_off, Toast.LENGTH_SHORT);
                 toast.show();
                 AlarmManager amgr = (AlarmManager) act.getSystemService(Context.ALARM_SERVICE);
 

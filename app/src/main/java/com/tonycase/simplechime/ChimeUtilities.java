@@ -20,11 +20,13 @@ import java.util.concurrent.TimeUnit;
 public final class ChimeUtilities {
 
     private static final String TAG = "ChimeUtilities";
+    private static final String DEFAULT_HOURS_PREF = "7 21";
 
     public static TimeRange getTimeRange(Context context) {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String timesStr = prefs.getString(context.getString(R.string.pref_hours), null);
+        String timesStr = prefs.getString(context.getString(R.string.pref_hours),
+                DEFAULT_HOURS_PREF);
 
         if (timesStr != null) {
             try {
