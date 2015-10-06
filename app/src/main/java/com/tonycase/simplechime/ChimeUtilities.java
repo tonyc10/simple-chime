@@ -63,7 +63,7 @@ public final class ChimeUtilities {
         if (uriStr == null) {
             String uriPref = prefs.getString(context.getString(R.string.pref_sound),
                     String.valueOf(R.raw.clong1));
-            int resID = context.getResources().getIdentifier(uriPref , "raw", context.getPackageName());
+            int resID = context.getResources().getIdentifier(uriPref, "raw", context.getPackageName());
             uriStr = Uri.parse("android.resource://com.tonycase.simplechime/" + resID).toString();
         }
 

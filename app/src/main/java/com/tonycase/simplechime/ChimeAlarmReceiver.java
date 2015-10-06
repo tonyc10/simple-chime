@@ -19,13 +19,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ChimeAlarmReceiver extends BroadcastReceiver {
-	
-	private final String TAG = "Chime Receiver";
 
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		
-		Log.d(TAG, "onReceive");
+    private final String TAG = "Chime Receiver";
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+
+        Log.d(TAG, "onReceive");
 
         // We need a calendar set to current time for a couple operations here
         Calendar cal = new GregorianCalendar();
@@ -41,14 +41,14 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
         makeToast(context, cal);
 
         // Play the chime sound
-		ChimeUtilities.playSound(context);
+        ChimeUtilities.playSound(context);
 
         // cancel and reset for tomorrow if needed
         if (hourState == HourState.RESET_FOR_TOMORROW) {
             Log.i(TAG, "Resetting for tomorrow");
-             ChimeUtilities.startAlarm(context);    // cancels existing alarm, starts new one for tomorrow a.m.
+            ChimeUtilities.startAlarm(context);    // cancels existing alarm, starts new one for tomorrow a.m.
         }
-	}
+    }
 
     enum HourState {
 
