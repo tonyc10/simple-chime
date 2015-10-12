@@ -34,6 +34,7 @@
                 <action android:name="com.tonycase.chimealarm.CHIME_ALARM_ACTION" />
             </intent-filter>
         </receiver>
+
         <receiver android:name=".BootCompletedReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -42,7 +43,7 @@
 
         <receiver android:name=".OnUpgradeReceiver">
             <intent-filter>
-                <action android:name="android.intent.action.ACTION_MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 

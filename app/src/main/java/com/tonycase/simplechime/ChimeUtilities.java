@@ -6,8 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -41,6 +43,58 @@ public final class ChimeUtilities {
         }
         return TimeRange.ALL_DAY;   // all hours
     }
+
+    public static void checkForUpgrade(SharedPreferences prefs, Context context) {
+
+        // check for existence of new preference
+        if (prefs.contains(context.getString(R.string.pref_all_day))) {
+            // preferences have already been updated
+            Log.d(TAG, "no need to migrate, already happened");
+            Toast.makeText(context, "PREF ALL DAY PRESENT", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // move volume up
+        int vol = prefs.getInt(context.getString(R.string.pref_volume), 10);
+        int newVol = vol + 2;
+        newVol = Math.min(newVol, 10);
+
+        SharedPreferences.Editor editor =
+                PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putInt(context.getString(R.string.pref_volume), newVol).commit();
+
+//        Preference preference = prefs. findPreference(context.getString(R.string.pref_volume));
+//        preference.setSummary("Volume setting: " + newVol);
+
+        // migrate data.
+        TimeRange timeRange = ChimeUtilities.getTimeRange(context);
+        if (timeRange.isAllDay()) {
+            // there is no data for time range, so no need to migrate
+            Log.d(TAG, "no need to migrate, is all day");
+            Toast.makeText(context, "IS ALL DAY", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Toast.makeText(context, "MIGRATING!", Toast.LENGTH_LONG).show();
+
+        // switch new preference boolean chimeAllDay to off.
+        editor.putBoolean(context.getString(R.string.pref_all_day), false).commit();
+
+        // adjust time range of end time to 0-23.
+        int start = timeRange.getStart();
+        int end = timeRange.getEnd();
+        if (end < 12) {
+            end += 12;
+            // persist new values
+            String value = start + " " + end;
+            Log.d(TAG, "Migrating to " + value);
+            // if preference is On, reset alarm.
+            editor.putString(context.getString(R.string.pref_hours), value).commit();
+//            Preference pref = findPreference(getString(R.string.pref_hours));
+//            pref.setSummary(HoursSelectDialog.summaryText(start, end, context));
+        }
+    }
+
 
     public static void playSound(Context context) {
 

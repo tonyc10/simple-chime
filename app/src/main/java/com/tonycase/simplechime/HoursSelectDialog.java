@@ -99,7 +99,7 @@ public class HoursSelectDialog extends DialogPreference {
             endHourDropdown.setEnabled(true);
             intermedText.setEnabled(true);
 
-            setSummary(summaryText(start, end));
+            setSummary(summaryText(start, end, getContext()));
             startHourDropdown.requestFocus();
         }
 
@@ -162,7 +162,7 @@ public class HoursSelectDialog extends DialogPreference {
                     throw new IllegalStateException("Save hours are not legit");
                 String value = start + " " + end;
                 persistString(value);
-                setSummary(summaryText(start, end));
+                setSummary(summaryText(start, end, getContext()));
             }
             notifyChanged();
         }
@@ -175,7 +175,7 @@ public class HoursSelectDialog extends DialogPreference {
         editor.putBoolean(getContext().getString(R.string.pref_all_day), allDay).commit();
     }
 
-    private String summaryText(int start, int end) {
+    public static String summaryText(int start, int end, Context context) {
         Calendar startCal = new GregorianCalendar();
         startCal.set(Calendar.SECOND, 0);
         startCal.set(Calendar.MINUTE, 0);
@@ -187,9 +187,9 @@ public class HoursSelectDialog extends DialogPreference {
         endCal.set(Calendar.HOUR_OF_DAY, end);
 
         DateFormat dateFormat = DateFormat.getTimeInstance(DateFormat.SHORT);
-        return getContext().getString(R.string.every_hour_from)
+        return context.getString(R.string.every_hour_from)
                 + dateFormat.format(startCal.getTime()) + " "
-                + getContext().getString(R.string.to) + " "
+                + context.getString(R.string.to) + " "
                 + dateFormat.format(endCal.getTime());
     }
 

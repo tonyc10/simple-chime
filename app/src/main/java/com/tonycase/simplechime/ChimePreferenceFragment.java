@@ -43,12 +43,32 @@ public class ChimePreferenceFragment extends PreferenceFragment
         addPreferencesFromResource(R.xml.userpreferences);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+
         prefs.registerOnSharedPreferenceChangeListener(this);
 
         setSoundSummary(prefs);
         setRingtoneSummary(prefs);
         setSource(prefs);
         setActive(prefs);
+        setHourSummary(prefs);
+    }
+
+
+
+    // needed for after migration only
+    private void setHourSummary(SharedPreferences sharedPreferences) {
+
+        TimeRange timeRange = ChimeUtilities.getTimeRange(getActivity());
+        if (timeRange.isAllDay()) {
+            return;
+        }
+        Toast toast = Toast.makeText(getActivity(),"Time Range: " + timeRange.getStart() + " " +timeRange.getEnd(), Toast.LENGTH_SHORT);
+        toast.show();
+
+        String summary = HoursSelectDialog.summaryText(
+                timeRange.getStart(), timeRange.getEnd(), getActivity());
+        Preference timePref = findPreference(getString(R.string.pref_hours));
+        timePref.setSummary(summary);
     }
 
     private void setActive(SharedPreferences sharedPreferences) {
@@ -96,6 +116,8 @@ public class ChimePreferenceFragment extends PreferenceFragment
             ringtonePref.setEnabled(false);
         }
     }
+
+
 
     private void setSoundSummary(SharedPreferences sharedPreferences) {
 

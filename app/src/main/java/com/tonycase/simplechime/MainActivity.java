@@ -1,6 +1,5 @@
 package com.tonycase.simplechime;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.Color;
@@ -8,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.ViewGroup;
@@ -17,7 +17,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Chime Main";
     private static final String FRAG_TAG = "PREF_FRAGMENT";
@@ -74,7 +74,6 @@ public class MainActivity extends Activity {
         // play sound and start animation
         playSoundShakeBell();
     }
-
     // allow fragment in this package to access this method
     void playSoundShakeBell() {
         ChimeUtilities.playSound(this);
