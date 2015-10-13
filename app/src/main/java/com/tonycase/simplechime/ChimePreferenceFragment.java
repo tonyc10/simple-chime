@@ -4,8 +4,10 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.media.Ringtone;
@@ -14,14 +16,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.preference.SwitchPreference;
 import android.provider.Settings;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
 @SuppressLint("NewApi")
@@ -41,10 +42,33 @@ public class ChimePreferenceFragment extends PreferenceFragment
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate() ");
         addPreferencesFromResource(R.xml.userpreferences);
+    }
+
+    // Our handler for received Intents. This will be called whenever an Intent
+// with an action named "custom-event-name" is broadcasted.
+    private BroadcastReceiver messageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            setHourSummary(prefs);
+        }
+    };
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
         prefs.registerOnSharedPreferenceChangeListener(this);
+
+        // Register to receive messages.
+        // We are registering an observer (messageReceiver) to receive Intents
+        // with actions named "custom-event-name".
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(messageReceiver,
+                new IntentFilter(ChimeUtilities.HOURS_UPDATED_MSG));
+
 
         setSoundSummary(prefs);
         setRingtoneSummary(prefs);
@@ -53,7 +77,12 @@ public class ChimePreferenceFragment extends PreferenceFragment
         setHourSummary(prefs);
     }
 
-
+    @Override
+    public void onDestroy() {
+        // Unregister since the activity is about to be closed.
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(messageReceiver);
+        super.onDestroy();
+    }
 
     // needed for after migration only
     private void setHourSummary(SharedPreferences sharedPreferences) {
@@ -62,9 +91,6 @@ public class ChimePreferenceFragment extends PreferenceFragment
         if (timeRange.isAllDay()) {
             return;
         }
-        Toast toast = Toast.makeText(getActivity(),"Time Range: " + timeRange.getStart() + " " +timeRange.getEnd(), Toast.LENGTH_SHORT);
-        toast.show();
-
         String summary = HoursSelectDialog.summaryText(
                 timeRange.getStart(), timeRange.getEnd(), getActivity());
         Preference timePref = findPreference(getString(R.string.pref_hours));

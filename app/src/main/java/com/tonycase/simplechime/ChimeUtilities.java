@@ -6,10 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.preference.Preference;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -21,15 +20,27 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ChimeUtilities {
 
+    public static final String HOURS_UPDATED_MSG = "hour_updated_msg";
     private static final String TAG = "ChimeUtilities";
     private static final String DEFAULT_HOURS_PREF = "7 21";
 
+    /**
+     * Get simple time range object representing hours chime is on.
+     */
     public static TimeRange getTimeRange(Context context) {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        // todo?
+        boolean allDay = prefs.getBoolean(context.getString(R.string.pref_all_day), true);
+        if (allDay) {
+            return TimeRange.ALL_DAY;
+        }
+
         String timesStr = prefs.getString(context.getString(R.string.pref_hours),
                 DEFAULT_HOURS_PREF);
 
+        // Should not be null.  But I'll leave the check in anyway.
         if (timesStr != null) {
             try {
                 String[] hoursArray = timesStr.split(" ");
@@ -39,6 +50,7 @@ public final class ChimeUtilities {
                 return new TimeRange(start, end);
             } catch (Exception ex) {
                 Log.w(TAG, "Unable to parse time string", ex);
+                // log and fall through to ALL_DAY
             }
         }
         return TimeRange.ALL_DAY;   // all hours
@@ -46,11 +58,10 @@ public final class ChimeUtilities {
 
     public static void checkForUpgrade(SharedPreferences prefs, Context context) {
 
-        // check for existence of new preference
+        // check for existence of new preference.  If it's here, we've already upgraded.
         if (prefs.contains(context.getString(R.string.pref_all_day))) {
             // preferences have already been updated
             Log.d(TAG, "no need to migrate, already happened");
-            Toast.makeText(context, "PREF ALL DAY PRESENT", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -63,19 +74,13 @@ public final class ChimeUtilities {
                 PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putInt(context.getString(R.string.pref_volume), newVol).commit();
 
-//        Preference preference = prefs. findPreference(context.getString(R.string.pref_volume));
-//        preference.setSummary("Volume setting: " + newVol);
-
         // migrate data.
         TimeRange timeRange = ChimeUtilities.getTimeRange(context);
         if (timeRange.isAllDay()) {
             // there is no data for time range, so no need to migrate
             Log.d(TAG, "no need to migrate, is all day");
-            Toast.makeText(context, "IS ALL DAY", Toast.LENGTH_LONG).show();
             return;
         }
-
-        Toast.makeText(context, "MIGRATING!", Toast.LENGTH_LONG).show();
 
         // switch new preference boolean chimeAllDay to off.
         editor.putBoolean(context.getString(R.string.pref_all_day), false).commit();
@@ -92,7 +97,20 @@ public final class ChimeUtilities {
             editor.putString(context.getString(R.string.pref_hours), value).commit();
 //            Preference pref = findPreference(getString(R.string.pref_hours));
 //            pref.setSummary(HoursSelectDialog.summaryText(start, end, context));
+
+            sendMessage(context);
+
         }
+    }
+
+    // Send an Intent with an action named "custom-event-name". The Intent sent should
+    // be received by the ReceiverActivity.
+    private static void sendMessage(Context context) {
+        Log.d("sender", "Broadcasting message");
+        Intent intent = new Intent(HOURS_UPDATED_MSG);
+        // You can also include some extra data.
+        // intent.putExtra("message", "This is my message!");
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
 
