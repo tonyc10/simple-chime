@@ -21,17 +21,18 @@ import java.util.concurrent.TimeUnit;
 public final class ChimeUtilities {
 
     public static final String HOURS_UPDATED_MSG = "hour_updated_msg";
+
     private static final String TAG = "ChimeUtilities";
     private static final String DEFAULT_HOURS_PREF = "7 21";
 
     /**
-     * Get simple time range object representing hours chime is on.
+     * Get simple time range object representing the hours the chime is on.
      */
     public static TimeRange getTimeRange(Context context) {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        // todo?
+        // If user does not have specific hours set, or turns hours off, return ALL_DAY
         boolean allDay = prefs.getBoolean(context.getString(R.string.pref_all_day), true);
         if (allDay) {
             return TimeRange.ALL_DAY;
@@ -40,7 +41,7 @@ public final class ChimeUtilities {
         String timesStr = prefs.getString(context.getString(R.string.pref_hours),
                 DEFAULT_HOURS_PREF);
 
-        // Should not be null.  But I'll leave the check in anyway.
+        // Should not have been set to null, except in previous (1.0) version.
         if (timesStr != null) {
             try {
                 String[] hoursArray = timesStr.split(" ");
@@ -56,7 +57,13 @@ public final class ChimeUtilities {
         return TimeRange.ALL_DAY;   // all hours
     }
 
-    public static void checkForUpgrade(SharedPreferences prefs, Context context) {
+    /**
+     * Check to see if app upgrade has occurred by checking for existance of new preference.  If so,
+     * this performs the necessary migration and sends a LocalBroadcast when complete.
+     */
+    public static void checkAndPerformUpgrade(SharedPreferences prefs, Context context) {
+
+        // This code pertains to upgrade from 1.0 to 1.1
 
         // check for existence of new preference.  If it's here, we've already upgraded.
         if (prefs.contains(context.getString(R.string.pref_all_day))) {
@@ -65,16 +72,16 @@ public final class ChimeUtilities {
             return;
         }
 
-        // move volume up
+        // move volume up, since we've really adjusted the volume downward with this release.
         int vol = prefs.getInt(context.getString(R.string.pref_volume), 10);
         int newVol = vol + 2;
         newVol = Math.min(newVol, 10);
-
         SharedPreferences.Editor editor =
                 PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putInt(context.getString(R.string.pref_volume), newVol).commit();
 
-        // migrate data.
+        // Don't bother migrating time range data if timeRange.isAllDay, because in the previous version this
+        // means there is no time range.
         TimeRange timeRange = ChimeUtilities.getTimeRange(context);
         if (timeRange.isAllDay()) {
             // there is no data for time range, so no need to migrate
@@ -82,10 +89,10 @@ public final class ChimeUtilities {
             return;
         }
 
-        // switch new preference boolean chimeAllDay to off.
+        // The user is on a time range, so switch new preference boolean chime-all-day to off
         editor.putBoolean(context.getString(R.string.pref_all_day), false).commit();
 
-        // adjust time range of end time to 0-23.
+        // adjust time range of end time fro 0-11 to 12-23.
         int start = timeRange.getStart();
         int end = timeRange.getEnd();
         if (end < 12) {
@@ -93,13 +100,10 @@ public final class ChimeUtilities {
             // persist new values
             String value = start + " " + end;
             Log.d(TAG, "Migrating to " + value);
-            // if preference is On, reset alarm.
             editor.putString(context.getString(R.string.pref_hours), value).commit();
-//            Preference pref = findPreference(getString(R.string.pref_hours));
-//            pref.setSummary(HoursSelectDialog.summaryText(start, end, context));
 
+            // local broadcast so UI can be properly updated.
             sendMessage(context);
-
         }
     }
 
@@ -108,12 +112,13 @@ public final class ChimeUtilities {
     private static void sendMessage(Context context) {
         Log.d("sender", "Broadcasting message");
         Intent intent = new Intent(HOURS_UPDATED_MSG);
-        // You can also include some extra data.
-        // intent.putExtra("message", "This is my message!");
+        // no extra data.  (e.g. intent.putExtra("message", "This is my message!"));
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-
+    /**
+     * Play a user's stored selected sound at the user's stored volume preference.
+     */
     public static void playSound(Context context) {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -121,6 +126,9 @@ public final class ChimeUtilities {
         playSound(context, volume);
     }
 
+    /**
+     * Play a user's stored selected sound at the given volume.
+     */
     public static void playSound(Context context, int volume) {
 
         // play sound
@@ -149,22 +157,25 @@ public final class ChimeUtilities {
         context.startService(intentNew);
     }
 
-    public static void startAlarm(Context act) {
+    /** Set up alarms with the Alarm Manager, using the user's stored preferences to get the proper
+     * hour (today or tomorrow) on which to start.
+     */
+    public static void startAlarm(Context context) {
 
         Log.d(TAG, "Setting alarm, current time is " + new Date());
 
-        AlarmManager amgr = (AlarmManager) act.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager amgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         int alarmType = AlarmManager.RTC_WAKEUP;
 
-        TimeRange timeRange = getTimeRange(act);
+        TimeRange timeRange = getTimeRange(context);
         Log.v(TAG, "Current time range is " + timeRange);
 
         Calendar cal = new GregorianCalendar();
         int hour = cal.get(Calendar.HOUR_OF_DAY);
 
-        String CHIME_ALARM_ACTION = act.getString(R.string.alarm_action); // "com.tonycase.chimealarm.CHIME_ALARM_ACTION"
+        String CHIME_ALARM_ACTION = context.getString(R.string.alarm_action); // "com.tonycase.chimealarm.CHIME_ALARM_ACTION"
         Intent intentToFire = new Intent(CHIME_ALARM_ACTION);
-        PendingIntent pIntent = PendingIntent.getBroadcast(act, 0, intentToFire, 0);
+        PendingIntent pIntent = PendingIntent.getBroadcast(context, 0, intentToFire, 0);
 
         // remove any existing alarms
         amgr.cancel(pIntent);
@@ -176,6 +187,7 @@ public final class ChimeUtilities {
         int start = timeRange.getStart();
         int end = timeRange.getEnd();
 
+        // Inverse mode is when the user chooses a time range going past midnight.  E.g. 8 am to 2 am.
         if (timeRange.isInverseMode()) {
             // In inverse mode, end is start and start is end, so..
             // we're chiming if hour is less than or equal to start, or greater than or equal to end

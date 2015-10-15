@@ -18,7 +18,7 @@ public class OnUpgradeReceiver extends BroadcastReceiver {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         // migrate data from 1.0 to 1.1
-        ChimeUtilities.checkForUpgrade(sharedPreferences, context);
+        ChimeUtilities.checkAndPerformUpgrade(sharedPreferences, context);
 
         // reset alarm
         boolean chimeOn = sharedPreferences.getBoolean(context.getString(R.string.pref_on_off), false);
