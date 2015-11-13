@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
                 ll.setBackgroundColor(newColor);
             } else {
                 // make it white
-                ll.setBackgroundColor(Color.argb(176, 255, 255, 255));
+                ll.setBackgroundColor(Color.argb(224, 255, 255, 255));
             }
             // animation
             ll.startAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.anim.transparent_to_opaque));
