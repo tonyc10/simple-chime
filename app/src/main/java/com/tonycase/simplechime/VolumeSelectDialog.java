@@ -17,7 +17,7 @@ public class VolumeSelectDialog extends DialogPreference {
 
     private final String TAG = "VolumeSelectDialog";
 
-    public static final int DEFAULT_VALUE = 10;
+    public static final int DEFAULT_VALUE = 6;
 
     private SeekBar seekBar;
     private TextView valueTV;

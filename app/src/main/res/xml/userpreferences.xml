@@ -19,7 +19,7 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/sound_settings">
         <com.tonycase.simplechime.VolumeSelectDialog
-            android:defaultValue="8"
+            android:defaultValue="6"
             android:key="@string/pref_volume"
             android:summary="@string/volume_summary_default"
             android:title="@string/volume" />

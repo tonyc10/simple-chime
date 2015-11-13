@@ -69,7 +69,6 @@ public class ChimePreferenceFragment extends PreferenceFragment
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(messageReceiver,
                 new IntentFilter(ChimeUtilities.HOURS_UPDATED_MSG));
 
-
         setSoundSummary(prefs);
         setRingtoneSummary(prefs);
         setSource(prefs);
@@ -142,8 +141,6 @@ public class ChimePreferenceFragment extends PreferenceFragment
             ringtonePref.setEnabled(false);
         }
     }
-
-
 
     private void setSoundSummary(SharedPreferences sharedPreferences) {
 
