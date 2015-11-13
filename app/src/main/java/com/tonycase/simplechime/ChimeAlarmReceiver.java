@@ -88,7 +88,7 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
     private void makeToast(Context context, Calendar cal) {
 
         // hh:mm a
-        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
+        DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
         String message = df.format(cal.getTime());
         int duration = Toast.LENGTH_LONG;
         Toast toast = Toast.makeText(context, message, duration);
