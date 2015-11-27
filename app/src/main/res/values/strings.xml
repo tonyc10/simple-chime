@@ -30,11 +30,11 @@
     <string name="times_title">Chime Times</string>
     <string name="volume_summary_default">Volume setting: 8</string>
     <string name="volume">Volume</string>
-    <string name="source_summary_app">Choose chime sound from app</string>
+    <string name="source_summary_app">Using chime sound from app</string>
     <string name="source_summary_phone">Choose phone notification sound</string>
     <string name="app">App</string>
     <string name="phone">Phone</string>
-    <string name="source_title">Sound Source: App or Phone</string>
+    <string name="source_title">Alternate Sound Source: Phone?</string>
     <string name="sound_dialog_title">Chime Sound</string>
     <string name="increment_dialog_title">Chime Increment</string>
     <string name="sound_summary_default">Selected sound: Clong</string>

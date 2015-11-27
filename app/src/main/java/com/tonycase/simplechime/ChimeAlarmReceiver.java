@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -18,6 +19,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**
+ * Receiver called with intent called on the AlarmManager.
+ * Makes toast, plays sounds, and if applicable schedules next alarm.
+ */
 public class ChimeAlarmReceiver extends BroadcastReceiver {
 
     private final String TAG = "Chime Receiver";
@@ -44,12 +49,18 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
         ChimeUtilities.playSound(context);
 
         // cancel and reset for tomorrow if needed
-        if (hourState == HourState.RESET_FOR_TOMORROW) {
-            Log.i(TAG, "Resetting for tomorrow");
+        if (hourState == HourState.RESET_FOR_TOMORROW
+                   // With Kitkat and later, we don't use repeating alarm, so reset everytime.
+                || Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+
+            Log.d(TAG, "Resetting for tomorrow");
             ChimeUtilities.startAlarm(context);    // cancels existing alarm, starts new one for tomorrow a.m.
         }
     }
 
+    /** enum for specifying what kind of hour this is:  an hour to play the chime (normal), and hour to
+     *  not play the chime (invalid) or an hour to reschedule the chime (last chime of the day).
+     */
     enum HourState {
 
         INVALID,

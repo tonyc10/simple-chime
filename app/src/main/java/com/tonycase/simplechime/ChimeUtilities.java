@@ -6,9 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -58,7 +60,33 @@ public final class ChimeUtilities {
     }
 
     /**
-     * Check to see if app upgrade has occurred by checking for existance of new preference.  If so,
+     * Get simple time range object representing the hours the chime is on.
+     */
+    public static TimeRange getTimeRangeOldVersion(Context context) {
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        String timesStr = prefs.getString(context.getString(R.string.pref_hours),
+                null);
+
+        // Should not have been set to null, except in previous (1.0) version.
+        if (timesStr != null) {
+            try {
+                String[] hoursArray = timesStr.split(" ");
+                int start = Integer.parseInt(hoursArray[0]);
+                int end = Integer.parseInt(hoursArray[1]);
+
+                return new TimeRange(start, end);
+            } catch (Exception ex) {
+                Log.w(TAG, "Unable to parse time string", ex);
+                // log and fall through to ALL_DAY
+            }
+        }
+        return TimeRange.ALL_DAY;   // all hours
+    }
+
+    /**
+     * Check to see if app upgrade has occurred by checking for existence of new preference.  If so,
      * this performs the necessary migration and sends a LocalBroadcast when complete.
      */
     public static void checkAndPerformUpgrade(SharedPreferences prefs, Context context) {
@@ -69,25 +97,32 @@ public final class ChimeUtilities {
         if (prefs.contains(context.getString(R.string.pref_all_day))) {
             // preferences have already been updated
             Log.d(TAG, "no need to migrate, already happened");
+            Toast.makeText(context, "No need to migrate!", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        SharedPreferences.Editor editor =
+                PreferenceManager.getDefaultSharedPreferences(context).edit();
 
         // move volume up, since we've really adjusted the volume downward with this release.
         int vol = prefs.getInt(context.getString(R.string.pref_volume), 10);
-        int newVol = vol + 2;
-        newVol = Math.min(newVol, 10);
-        SharedPreferences.Editor editor =
-                PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putInt(context.getString(R.string.pref_volume), newVol).commit();
+        if (vol < 5) {
+            int newVol = vol + 2;
+            newVol = Math.min(newVol, 10);
+            editor.putInt(context.getString(R.string.pref_volume), newVol).commit();
+        }
+
 
         // Don't bother migrating time range data if timeRange.isAllDay, because in the previous version this
         // means there is no time range.
-        TimeRange timeRange = ChimeUtilities.getTimeRange(context);
+        TimeRange timeRange = ChimeUtilities.getTimeRangeOldVersion(context);
         if (timeRange.isAllDay()) {
             // there is no data for time range, so no need to migrate
             Log.d(TAG, "no need to migrate, is all day");
+            Toast.makeText(context, "is All Day, aborting", Toast.LENGTH_SHORT).show();
             return;
         }
+        Toast.makeText(context, "Onward, NOT all day", Toast.LENGTH_SHORT).show();
 
         // The user is on a time range, so switch new preference boolean chime-all-day to off
         editor.putBoolean(context.getString(R.string.pref_all_day), false).commit();
@@ -221,6 +256,12 @@ public final class ChimeUtilities {
         Log.d("Chime Main", "Next alarm will go off at " + cal.getTime());
         long toStartHour = cal.getTimeInMillis(); // Api-9:
         long oneHourTimeStep = TimeUnit.HOURS.toMillis(1);
-        amgr.setRepeating(alarmType, toStartHour, oneHourTimeStep, pIntent);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            // we can safely set a repeating alamr before KitKat -- should get delivered exactly on time.
+            amgr.setRepeating(alarmType, toStartHour, oneHourTimeStep, pIntent);
+        } else {
+            // with KitKat, need to specify new "Exact" API, non-repeating, to get exact results.
+            amgr.setExact(alarmType, toStartHour, pIntent);
+        }
     }
 }

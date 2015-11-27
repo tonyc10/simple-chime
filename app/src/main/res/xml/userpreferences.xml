@@ -24,14 +24,6 @@
             android:summary="@string/volume_summary_default"
             android:title="@string/volume" />
 
-        <SwitchPreference
-            android:defaultValue="false"
-            android:key="@string/pref_source"
-            android:summary="@string/source_summary_app"
-            android:switchTextOff="@string/app"
-            android:switchTextOn="@string/phone"
-            android:title="@string/source_title" />
-
         <ListPreference
             android:defaultValue="clong1"
             android:dialogTitle="@string/sound_dialog_title"
@@ -40,6 +32,14 @@
             android:key="@string/pref_sound"
             android:summary="@string/sound_summary_default"
             android:title="@string/sound_title" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/pref_source"
+            android:summary="@string/source_summary_app"
+            android:switchTextOff="@string/app"
+            android:switchTextOn="@string/phone"
+            android:title="@string/source_title" />
 
         <RingtonePreference
             android:key="@string/pref_ringtone"

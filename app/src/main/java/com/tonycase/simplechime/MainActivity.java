@@ -1,15 +1,12 @@
 package com.tonycase.simplechime;
 
 import android.app.Fragment;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.Menu;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
@@ -41,11 +38,9 @@ public class MainActivity extends AppCompatActivity {
             Fragment frag0 = MainActivity.this.getFragmentManager().findFragmentByTag(FRAG_TAG);
             // Display the fragment as the main content.
             if (frag0 == null && !isFinishing()) {
-                Log.i(TAG, "Replacing screen with new fragment");
                 MainActivity.this.getFragmentManager().beginTransaction()
                         .replace(android.R.id.content, prefFrag, FRAG_TAG)
                         .commit();
-                Log.i(TAG, "Fragment instance is " + prefFrag);
             }
 
             ViewGroup container = (ViewGroup) MainActivity.this.findViewById(R.id.frame1);
@@ -70,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "onCreate() instance = " + this);
         setContentView(R.layout.activity_main);
 
         prefFrag = new ChimePreferenceFragment();
@@ -94,7 +88,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "onResume() ");
         // kick off delayed start (actually, completion of start, here.)
         handler.postDelayed(delayedStart, 1300);
     }
