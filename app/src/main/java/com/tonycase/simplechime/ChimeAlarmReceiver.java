@@ -42,11 +42,17 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
             return;
         }
 
-        // If the user happens to be looking at their phone
-        makeToast(context, cal);
+        // only chime if we got it right
+        int minute = cal.get(Calendar.MINUTE);
+        boolean accurate = minute < 3 || minute > 58;
 
-        // Play the chime sound
-        ChimeUtilities.playSound(context);
+        if (accurate) {
+            // If the user happens to be looking at their phone
+            makeToast(context, cal);
+
+            // Play the chime sound
+            ChimeUtilities.playSound(context);
+        }
 
         // cancel and reset for tomorrow if needed
         if (hourState == HourState.RESET_FOR_TOMORROW
