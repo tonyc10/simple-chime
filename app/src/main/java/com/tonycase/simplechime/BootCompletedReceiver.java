@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 /**
  * Restarts the alarm, if it's turned on, after reboot.
@@ -20,11 +21,10 @@ public class BootCompletedReceiver extends BroadcastReceiver {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean chimeOn = prefs.getBoolean(context.getString(R.string.pref_on_off), false);
 
+        Log.d(TAG, "onReceiver, chimeOn = " + chimeOn);
+
         if (chimeOn) {
             ChimeUtilities.startAlarm(context);
         }
-
     }
-
-
 }

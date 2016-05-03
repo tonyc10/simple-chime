@@ -74,6 +74,7 @@ public class ChimePreferenceFragment extends PreferenceFragment
         setSource(prefs);
         setActive(prefs);
         setHourSummary(prefs);
+        setOffsetSummary(prefs);
     }
 
     @Override
@@ -104,22 +105,18 @@ public class ChimePreferenceFragment extends PreferenceFragment
                 (RingtonePreference) findPreference(getString(R.string.pref_ringtone));
         Preference timePref = findPreference(getString(R.string.pref_hours));
         Preference volPref = findPreference(getString(R.string.pref_volume));
+        Preference offsetPref = findPreference(getString(R.string.pref_offset));
 
         boolean isOn = sharedPreferences.getBoolean(getString(R.string.pref_on_off), false);
 
-        if (!isOn) {
-            sourcePref.setEnabled(false);
-            soundPref.setEnabled(false);
-            ringtonePref.setEnabled(false);
-            timePref.setEnabled(false);
-            volPref.setEnabled(false);
-        } else {
-            sourcePref.setEnabled(true);
-            soundPref.setEnabled(true);
-            ringtonePref.setEnabled(true);
-            timePref.setEnabled(true);
-            volPref.setEnabled(true);
-            // one must be off
+        sourcePref.setEnabled(isOn);
+        soundPref.setEnabled(isOn);
+        ringtonePref.setEnabled(isOn);
+        timePref.setEnabled(isOn);
+        volPref.setEnabled(isOn);
+        offsetPref.setEnabled(isOn);
+
+        if (isOn) {
             setSource(sharedPreferences);
         }
     }
@@ -146,6 +143,23 @@ public class ChimePreferenceFragment extends PreferenceFragment
 
         ListPreference soundPref = (ListPreference) findPreference(getString(R.string.pref_sound));
         soundPref.setSummary(getString(R.string.sound_summary_base) + soundPref.getEntry());
+    }
+
+    private void setOffsetSummary(SharedPreferences sharedPreferences) {
+        NumberPickerDialog offsetPref = (NumberPickerDialog) findPreference(getString(R.string.pref_offset));
+        int value = offsetPref.getValue();
+        if (value == 0) {
+            offsetPref.setSummary(getString(R.string.offset_summary_default));
+        }
+        else if (value < -1) {
+            offsetPref.setSummary(Math.abs(value) + " " + getString(R.string.offset_summary_before));
+        } else if (value == -1) {
+            offsetPref.setSummary(getString(R.string.offset_summary_before_singular));
+        } else if (value == 1) {
+            offsetPref.setSummary(getString(R.string.offset_summary_after_singular));
+        } else {
+            offsetPref.setSummary(value + " " + getString(R.string.offset_summary_after));
+        }
     }
 
     private void setRingtoneSummary(SharedPreferences sharedPreferences) {
@@ -193,9 +207,11 @@ public class ChimePreferenceFragment extends PreferenceFragment
             }
             setRingtoneSummary(sharedPreferences);
         } else if (key.equals(getActivity().getString(R.string.pref_on_off))
-                   || key.equals(getString(R.string.pref_hours))) {
+                   || (key.equals(getString(R.string.pref_hours)))
+                   || (key.equals(getString(R.string.pref_offset)))) {
 
             setActive(sharedPreferences);
+            setOffsetSummary(sharedPreferences);
 
             boolean chimeOn = sharedPreferences.getBoolean(
                     getActivity().getString(R.string.pref_on_off), false);
@@ -212,15 +228,10 @@ public class ChimePreferenceFragment extends PreferenceFragment
                 Toast toast = Toast.makeText(getActivity(), R.string.chime_is_on, Toast.LENGTH_SHORT);
                 toast.show();
             } else {
+
+                ChimeUtilities.cancelAlarm(getActivity());
                 Toast toast = Toast.makeText(getActivity(), R.string.chime_is_off, Toast.LENGTH_SHORT);
                 toast.show();
-                AlarmManager amgr = (AlarmManager) act.getSystemService(Context.ALARM_SERVICE);
-
-                String CHIME_ALARM_ACTION = getString(R.string.alarm_action); // "com.tonycase.chimealarm.CHIME_ALARM_ACTION"
-                Intent intentToFire = new Intent(CHIME_ALARM_ACTION);
-                PendingIntent pIntent = PendingIntent.getBroadcast(
-                        getActivity(), 0, intentToFire, 0);
-                amgr.cancel(pIntent);
             }
         }
     }

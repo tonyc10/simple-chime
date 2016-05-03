@@ -1,5 +1,6 @@
 package com.tonycase.simplechime;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -8,13 +9,16 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -119,10 +123,8 @@ public final class ChimeUtilities {
         if (timeRange.isAllDay()) {
             // there is no data for time range, so no need to migrate
             Log.d(TAG, "no need to migrate, is all day");
-            Toast.makeText(context, "is All Day, aborting", Toast.LENGTH_SHORT).show();
             return;
         }
-        Toast.makeText(context, "Onward, NOT all day", Toast.LENGTH_SHORT).show();
 
         // The user is on a time range, so switch new preference boolean chime-all-day to off
         editor.putBoolean(context.getString(R.string.pref_all_day), false).commit();
@@ -167,28 +169,12 @@ public final class ChimeUtilities {
     public static void playSound(Context context, int volume) {
 
         // play sound
-        Intent intentNew = new Intent(context, PlaySoundIntentService.class);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        Intent intentNew = getPlaySoundIntent(context, volume);
 
-        String uriStr = null;
-        boolean sourcePhone = prefs.getBoolean(context.getString(R.string.pref_source), false);
-        if (sourcePhone) {
-            uriStr = prefs.getString(context.getString(R.string.pref_ringtone), null);
-        }
-        if (uriStr == null) {
-            String uriPref = prefs.getString(context.getString(R.string.pref_sound),
-                    String.valueOf(R.raw.clong1));
-            int resID = context.getResources().getIdentifier(uriPref, "raw", context.getPackageName());
-            uriStr = Uri.parse("android.resource://com.tonycase.simplechime/" + resID).toString();
-        }
-
-        if (uriStr == null) {
+        if (intentNew == null) {
             return;
         }
 
-        intentNew.putExtra(PlaySoundIntentService.URI_KEY, uriStr);
-        intentNew.putExtra(PlaySoundIntentService.VOL_KEY, volume);
-        intentNew.putExtra(PlaySoundIntentService.PLAY_SOFTER_KEY, !sourcePhone);
         context.startService(intentNew);
     }
 
@@ -206,7 +192,11 @@ public final class ChimeUtilities {
         Log.v(TAG, "Current time range is " + timeRange);
 
         Calendar cal = new GregorianCalendar();
-        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        int currentHour = cal.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = cal.get(Calendar.MINUTE);
+
+        // the current time of day, in minutes
+        int currentTimeMinutes = currentHour*60 + currentMinute;
 
         String CHIME_ALARM_ACTION = context.getString(R.string.alarm_action); // "com.tonycase.chimealarm.CHIME_ALARM_ACTION"
         Intent intentToFire = new Intent(CHIME_ALARM_ACTION);
@@ -215,53 +205,127 @@ public final class ChimeUtilities {
         // remove any existing alarms
         amgr.cancel(pIntent);
 
-        // figure out time of new one
+        // second always zero
         cal.set(Calendar.SECOND, 0);
+
+        // minute zero too, unless offset set.
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        int offsetMinutes = prefs.getInt(context.getString(R.string.pref_offset), 0);
+
         cal.set(Calendar.MINUTE, 0);
 
-        int start = timeRange.getStart();
-        int end = timeRange.getEnd();
+        int startHour = timeRange.getStart();
+        // the time of the day to start the chime, in minutes
+        int startTimeMinutes = startHour*60;
+
+        int endHour = timeRange.getEnd();
+        // the time of the day to start the chime, in minutes
+        int endTimeMinutes = endHour*60;
+
+
+        // flat to set whether we are setting chime for this upcoming hour.  Needed for minutes-offset logic
+        boolean chimeActiveNow = false;
 
         // Inverse mode is when the user chooses a time range going past midnight.  E.g. 8 am to 2 am.
         if (timeRange.isInverseMode()) {
             // In inverse mode, end is start and start is end, so..
             // we're chiming if hour is less than or equal to start, or greater than or equal to end
-            if (hour <= end || hour >= start) {
+            if (currentTimeMinutes <= endTimeMinutes || currentTimeMinutes >= startTimeMinutes) {
+                chimeActiveNow = true;
                 // handle special case, end of day
-                if (hour == 23) {
+                if (currentHour == 23) {
                     cal.set(Calendar.HOUR_OF_DAY, 0);
                     cal.setTimeInMillis(cal.getTimeInMillis() + TimeUnit.DAYS.toMillis(1));
                 } else {
                     // set alarm to start next hour
-                    cal.set(Calendar.HOUR_OF_DAY, hour + 1);
+                    cal.set(Calendar.HOUR_OF_DAY, currentHour + 1);
                 }
             } else {
                 // jump ahead to end (which in inverse, is start time)
-                cal.set(Calendar.HOUR_OF_DAY, end);
+                cal.set(Calendar.HOUR_OF_DAY, endHour);
             }
         } else {
-            if (hour < start) {
-                // set alarm for start hour
-                cal.set(Calendar.HOUR_OF_DAY, start);
-            } else if (hour >= end) {
-                // set alarm for start hour tomorrow
-                cal.set(Calendar.HOUR_OF_DAY, start);
+            // regular mode.  Start hour comes before ending mode
+
+            if (currentTimeMinutes < startTimeMinutes) {
+                // we haven't reached chimes hours yet.  Set alarm for start hour
+                cal.set(Calendar.HOUR_OF_DAY, startHour);
+            } else if (currentTimeMinutes >= endTimeMinutes) {
+                // After chime hours.  Set alarm for start hour tomorrow
+                cal.set(Calendar.HOUR_OF_DAY, startHour);
                 cal.setTimeInMillis(cal.getTimeInMillis() + TimeUnit.DAYS.toMillis(1));
             } else {
-                // set alarm to start next hour
-                cal.set(Calendar.HOUR_OF_DAY, hour + 1);
+                chimeActiveNow = true;
+                // During chime hours.  Set alarm to start next hour
+                cal.set(Calendar.HOUR_OF_DAY, currentHour + 1);
             }
         }
+//        cal.set(Calendar.MINUTE, offsetMinutes);
 
-        Log.d("Chime Main", "Next alarm will go off at " + cal.getTime());
-        long toStartHour = cal.getTimeInMillis(); // Api-9:
+        long startTime = cal.getTimeInMillis(); // Api-9:
         long oneHourTimeStep = TimeUnit.HOURS.toMillis(1);
+
+        // apply offset
+        startTime += TimeUnit.MINUTES.toMillis(offsetMinutes);
+        // handle case where first time alarm set for *before* current time, or more than an hour away due
+        //   to offset
+        long now = System.currentTimeMillis();
+        if (chimeActiveNow) {
+            if (now > startTime) {
+                startTime += TimeUnit.HOURS.toMillis(1);
+            }
+            else if (now < startTime - TimeUnit.HOURS.toMillis(1)) {
+                startTime -= TimeUnit.HOURS.toMillis(1);
+            }
+        }
+        Log.d("Chime Main", "Next alarm will go off at " + new Date(startTime));
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
             // we can safely set a repeating alamr before KitKat -- should get delivered exactly on time.
-            amgr.setRepeating(alarmType, toStartHour, oneHourTimeStep, pIntent);
+            amgr.setRepeating(alarmType, startTime, oneHourTimeStep, pIntent);
         } else {
             // with KitKat, need to specify new "Exact" API, non-repeating, to get exact results.
-            amgr.setExact(alarmType, toStartHour, pIntent);
+            amgr.setExact(alarmType, startTime, pIntent);
         }
+    }
+
+    /** Cancel the alarm if it's set.  Otherwise, no effect. */
+    public static void cancelAlarm(Activity activity) {
+        AlarmManager amgr = (AlarmManager) activity.getSystemService(Context.ALARM_SERVICE);
+
+        String CHIME_ALARM_ACTION = activity.getString(R.string.alarm_action); // "com.tonycase.chimealarm.CHIME_ALARM_ACTION"
+        Intent intentToFire = new Intent(CHIME_ALARM_ACTION);
+        PendingIntent pIntent = PendingIntent.getBroadcast(
+                activity, 0, intentToFire, 0);
+        amgr.cancel(pIntent);
+    }
+
+    public static Intent getPlaySoundIntent(Context context, int volume) {
+
+        // play sound
+        Intent intentNew = new Intent(context, PlaySoundIntentService.class);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        String uriStr = null;
+        boolean sourcePhone = prefs.getBoolean(context.getString(R.string.pref_source), false);
+        if (sourcePhone) {
+            uriStr = prefs.getString(context.getString(R.string.pref_ringtone), null);
+        }
+        if (uriStr == null) {
+            String uriPref = prefs.getString(context.getString(R.string.pref_sound),
+                    String.valueOf(R.raw.clong1));
+            int resID = context.getResources().getIdentifier(uriPref, "raw", context.getPackageName());
+            uriStr = Uri.parse("android.resource://com.tonycase.simplechime/" + resID).toString();
+        }
+
+        if (uriStr == null) {
+            return null;
+        }
+
+        intentNew.putExtra(PlaySoundIntentService.URI_KEY, uriStr);
+        intentNew.putExtra(PlaySoundIntentService.VOL_KEY, volume);
+        intentNew.putExtra(PlaySoundIntentService.PLAY_SOFTER_KEY, !sourcePhone);
+
+        return intentNew;
     }
 }

@@ -10,6 +10,8 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
 import java.io.IOException;
@@ -81,6 +83,8 @@ public class PlaySoundIntentService extends IntentService {
 			resPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
 		if (resPlayer == null) return;
 
+		// Set the actual volumes for volume settings 0 to 10.  We use the softer sequence if that's
+		//   specified, which I believe it is for phone sounds, as opposed to our sounds with the app.
         float[] volumes = playSofter
 				? new float[] { 0f,  .0015f, .004f, .015f, .04f,
                                        .1f,  .2f,   .36f,  .59f,  .8f,  1.0f }
@@ -94,14 +98,29 @@ public class PlaySoundIntentService extends IntentService {
 		resPlayer.start();
         isPrepared = true;
 
-        handler.postDelayed(stopPlayerRunnable, 4500);
-	}
+        handler.postDelayed(new StopPlayerRunnable(intent), 4500);
+    }
 
-    private Runnable stopPlayerRunnable = new Runnable() {
+    private class StopPlayerRunnable implements Runnable {
+
+		private @Nullable Intent intent;
+
+		StopPlayerRunnable() {
+			// no args constructor Ok.
+		}
+
+		StopPlayerRunnable(@Nullable Intent intent) {
+			this.intent = intent;
+		}
+
         @Override
         public void run() {
             stopPlayer();
-        }
+			if (intent != null) {
+                // release the wake lock in case this came from our wakeful receiver.
+				WakefulBroadcastReceiver.completeWakefulIntent(intent);
+			}
+		}
     };
 
     private void stopPlayer() {
@@ -113,16 +132,5 @@ public class PlaySoundIntentService extends IntentService {
             resPlayer.release();
         }
         isPrepared = false;
-    }
-
-    @Override
-    public void onDestroy() {
-        // This did
-//        Log.d(TAG, "onDestroy");
-//        handler.removeCallbacks(stopPlayerRunnable);
-//        handler = null;
-//        stopPlayer();
-//        resPlayer = null;
-        super.onDestroy();
     }
 }

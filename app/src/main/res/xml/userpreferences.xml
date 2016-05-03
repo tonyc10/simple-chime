@@ -49,4 +49,17 @@
             android:summary="@string/ringtone_summary_default"
             />
     </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/other_settings">
+
+        <com.tonycase.simplechime.NumberPickerDialog
+            android:key="@string/pref_offset"
+            android:summary="@string/offset_summary_default"
+            android:defaultValue="0"
+            android:title="@string/offset_title" />
+
+    </PreferenceCategory>
+
+    <!--            android:inputType="numberSigned"-->
+    <!--android:maxLength="2"-->
 </PreferenceScreen>

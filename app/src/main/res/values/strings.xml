@@ -3,6 +3,7 @@
     <string name="pref_on_off">PREF_ON_OFF</string>
     <string name="pref_all_day">PREF_ALL_DAY</string>
     <string name="pref_hours">PREF_HOURS</string>
+    <string name="pref_offset">PREF_OFFSET</string>
     <string name="pref_increment">PREF_INCREMENT</string>
     <string name="pref_volume">PREF_VOLUME</string>
     <string name="pref_source">PREF_SOURCE</string>
@@ -26,6 +27,11 @@
 
     <string name="activation">Activation</string>
     <string name="time_summary_default">Every hour all day</string>
+    <string name="offset_summary_default">No offset:  on the hour.</string>
+    <string name="offset_summary_before">minutes before the hour.</string>
+    <string name="offset_summary_before_singular">1 minute before the hour.</string>
+    <string name="offset_summary_after">minutes after the hour.</string>
+    <string name="offset_summary_after_singular">1 minute after the hour.</string>
     <string name="increment_summary_default">On the hour</string>
     <string name="times_title">Chime Times</string>
     <string name="volume_summary_default">Volume setting: 8</string>
@@ -49,5 +55,7 @@
     <string name="off_capitalized">OFF</string>
     <string name="on_capitalized">ON</string>
     <string name="every_hour_from">"Every hour from "</string>
+    <string name="offset_title">Offset</string>
+    <string name="other_settings">Other</string>
 
 </resources>

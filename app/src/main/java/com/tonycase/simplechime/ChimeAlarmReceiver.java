@@ -1,17 +1,21 @@
 package com.tonycase.simplechime;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import android.content.BroadcastReceiver;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.WakefulBroadcastReceiver;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.ImageView;
@@ -23,12 +27,15 @@ import android.widget.Toast;
  * Receiver called with intent called on the AlarmManager.
  * Makes toast, plays sounds, and if applicable schedules next alarm.
  */
-public class ChimeAlarmReceiver extends BroadcastReceiver {
+public class ChimeAlarmReceiver extends WakefulBroadcastReceiver {
 
     private final String TAG = "Chime Receiver";
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        int offset = prefs.getInt(context.getString(R.string.pref_offset), 0);
 
         Log.d(TAG, "onReceive");
 
@@ -43,15 +50,29 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
         }
 
         // only chime if we got it right
-        int minute = cal.get(Calendar.MINUTE);
+        int minute = (60 + cal.get(Calendar.MINUTE) - offset) % 60;
         boolean accurate = minute < 3 || minute > 58;
 
         if (accurate) {
             // If the user happens to be looking at their phone
             makeToast(context, cal);
 
-            // Play the chime sound
-            ChimeUtilities.playSound(context);
+            // Play the chime sound, with wakeful intent pattern
+            int volume = prefs.getInt(context.getString(R.string.pref_volume), 5);
+            Intent serviceIntent = ChimeUtilities.getPlaySoundIntent(context, volume);
+            startWakefulService(context, serviceIntent);
+
+            if (BuildConfig.DEBUG) {
+                DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
+                String message = "Chime at " + df.format(cal.getTime());
+                sendNotification(context, message);
+            }
+        } else {
+            if (BuildConfig.DEBUG) {
+                DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
+                String message = "NOT accurate, no chime at " + df.format(cal.getTime());
+                sendNotification(context, message);
+            }
         }
 
         // cancel and reset for tomorrow if needed
@@ -62,6 +83,37 @@ public class ChimeAlarmReceiver extends BroadcastReceiver {
             Log.d(TAG, "Resetting for tomorrow");
             ChimeUtilities.startAlarm(context);    // cancels existing alarm, starts new one for tomorrow a.m.
         }
+    }
+
+    private void sendNotification(Context context, String text) {
+        long time = System.currentTimeMillis();
+
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(context);
+
+        mBuilder.setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("Simple Chime")
+                        .setContentText(text);
+
+        // Creates an explicit intent for an Activity in your app
+        Intent resultIntent = new Intent(context, MainActivity.class);
+
+        // not sure I need this stackbuilder stuff.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        mBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotificationManager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        Log.d("ChimeAlarmReceiver", "sending notification to notificationManager: " + mBuilder);
+
+        int id = (int) (time/10000);
+        mNotificationManager.notify(id, mBuilder.build());
     }
 
     /** enum for specifying what kind of hour this is:  an hour to play the chime (normal), and hour to

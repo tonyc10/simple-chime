@@ -1,11 +1,13 @@
 package com.tonycase.simplechime;
 
 import android.app.Fragment;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -71,6 +73,13 @@ public class MainActivity extends AppCompatActivity {
 
         // play sound and start animation
         playSoundShakeBell();
+
+        // refresh the alarm if it's on.
+        boolean active = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
+                getString(R.string.pref_on_off), false);
+        if (active) {
+            ChimeUtilities.startAlarm(this);
+        }
     }
 
     // Play the user's sound and shake the bell image.
